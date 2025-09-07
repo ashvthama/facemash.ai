@@ -7,7 +7,7 @@ import {authClient} from "@/lib/auth-client"
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
+import {FaGithub , FaGoogle} from "react-icons/fa";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,8 +29,7 @@ const formSchema = z.object({
     password: z.string().min(1,{message:"Password is required"}),
 });
 export const SignInView = ()=>{
-
-    const router = useRouter();
+    const router=useRouter();
     const [error,setError]=useState<string | null>(null);
     const [pending, setPending]=useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
@@ -46,10 +45,10 @@ export const SignInView = ()=>{
         authClient.signIn.email (
             {
                 email:data.email,
-                password:data.password
+                password:data.password,
+                callbackURL:"/"
             },
             {
-
                 onSuccess:()=>{
                     setPending(false);
                     router.push("/");
@@ -61,6 +60,25 @@ export const SignInView = ()=>{
             }
         )
     };
+    const onSocial = (provider:"github"| "google")=>{
+            setError(null);
+            setPending(true);
+            authClient.signIn.social(
+                {  
+                    provider:provider,
+                    callbackURL:"/"
+                },
+                {
+                    onSuccess:()=>{
+                        setPending(false);
+                    },
+                    onError:({error})=>{
+                        setPending(false);
+                        setError(error.message)
+                    }
+                }
+            )
+        };
     return(
         <div className="flex flex-col gap-6">
             < Card className="overflow-hidden p-0">
@@ -122,11 +140,11 @@ export const SignInView = ()=>{
                                     <span className="bg-card text-muted-foreground relative z-10 px-2">Or continue with</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Button disabled={pending} variant="outline" type="button" className="w-full">
-                                        Google
+                                    <Button disabled={pending} variant="outline" type="button" className="w-full" onClick={()=>onSocial("google")}>
+                                        <FaGoogle/>
                                     </Button>
-                                    <Button disabled={pending} variant="outline" type="button" className="w-full">
-                                        Github
+                                    <Button disabled={pending} variant="outline" type="button" className="w-full" onClick={()=>onSocial("github")}>
+                                        <FaGithub/>
                                     </Button>
                                 </div>
                                 <div className="text-center text-sm ">
